@@ -555,7 +555,7 @@ export class CacheSettings implements CacheSettingsI {
 
   enabled = true;
   directory = "";
-  maxSize = 500; // Size in MB
+  maxSize = 2048; // Size in MB
 }
 
 export class DisplaySettings  implements DisplaySettingsI {

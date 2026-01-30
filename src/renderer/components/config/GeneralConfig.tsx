@@ -30,11 +30,18 @@ export default class GeneralConfig extends React.Component {
     onUpdateGeneralSettings(fn: (settings: GeneralSettings) => void): void,
     onUpdateRemoteSettings(fn: (settings: RemoteSettings) => void): void,
     onUpdateConfig(fn: (config: Config) => void): void,
+    simpleMode?: boolean,
+    search?: string,
   };
+
+  shouldShow(text: string) {
+    return !this.props.search || text.toLowerCase().includes(this.props.search.toLowerCase());
+  }
 
   render() {
     return(
       <Grid container spacing={2}>
+        {(this.shouldShow("Display Settings") || this.shouldShow("General Settings")) && (
         <Grid item xs={12} sm={6} md={4} lg={3}>
           <Card>
             <CardContent>
@@ -47,7 +54,9 @@ export default class GeneralConfig extends React.Component {
             </CardContent>
           </Card>
         </Grid>
+        )}
 
+        {(this.shouldShow("Display Settings")) && (
         <Grid item xs={12} sm={4} md={3} lg={2}>
           <Card style={{overflow: 'visible'}}>
             <CardContent>
@@ -59,7 +68,9 @@ export default class GeneralConfig extends React.Component {
             </CardContent>
           </Card>
         </Grid>
+        )}
 
+        {(this.shouldShow("Caching")) && (
         <Grid item xs={12} sm={8} md={5} lg={4}>
           <Card>
             <CardContent>
@@ -69,7 +80,9 @@ export default class GeneralConfig extends React.Component {
             </CardContent>
           </Card>
         </Grid>
+        )}
 
+        {(this.shouldShow("Remote Settings")) && (
         <Grid item xs={12} sm={4} md={3} lg={3}>
           <Card>
             <CardContent>
@@ -80,7 +93,9 @@ export default class GeneralConfig extends React.Component {
             </CardContent>
           </Card>
         </Grid>
+        )}
 
+        {(this.shouldShow("Backup")) && (
         <Grid item xs={12} sm={"auto"}>
           <Card>
             <CardContent>
@@ -93,7 +108,9 @@ export default class GeneralConfig extends React.Component {
             </CardContent>
           </Card>
         </Grid>
+        )}
 
+        {(this.shouldShow("Theme")) && (
         <Grid item xs={12} sm={"auto"}>
           <Card>
             <CardContent>
@@ -104,7 +121,9 @@ export default class GeneralConfig extends React.Component {
             </CardContent>
           </Card>
         </Grid>
+        )}
 
+        {(this.shouldShow("Watermark")) && (
         <Grid item xs={12} sm={4} md={3} lg={3}>
           <Card>
             <CardContent>
@@ -114,6 +133,7 @@ export default class GeneralConfig extends React.Component {
             </CardContent>
           </Card>
         </Grid>
+        )}
       </Grid>
     );
   }

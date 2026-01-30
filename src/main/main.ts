@@ -18,6 +18,9 @@ app.on('ready', () => {
 
   // Enable garbage collection
   app.commandLine.appendSwitch('js-flags', '--expose_gc');
+  app.commandLine.appendSwitch('ignore-gpu-blacklist');
+  app.commandLine.appendSwitch('enable-gpu-rasterization');
+  app.commandLine.appendSwitch('enable-zero-copy');
 
   createNewWindow();
   createMainMenu(Menu, createMenuTemplate(app));

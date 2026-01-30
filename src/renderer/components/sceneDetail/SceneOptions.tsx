@@ -38,6 +38,8 @@ class SceneOptions extends React.Component {
     scene: Scene | SceneSettings,
     tutorial: string,
     isConfig: boolean,
+    simpleMode?: boolean,
+    search?: string,
     onUpdateScene(scene: Scene | SceneSettings, fn: (scene: Scene | SceneSettings) => void): void,
   };
 
@@ -65,7 +67,9 @@ class SceneOptions extends React.Component {
                 allSceneGrids={this.props.allSceneGrids}
                 scene={this.props.scene}
                 tutorial={this.props.tutorial}
-                onUpdateScene={this.props.onUpdateScene.bind(this)}/>
+                onUpdateScene={this.props.onUpdateScene.bind(this)}
+                simpleMode={this.props.simpleMode}
+                search={this.props.search}/>
             </CardContent>
           </Card>
         </Grid>
@@ -77,7 +81,9 @@ class SceneOptions extends React.Component {
                 scene={this.props.scene}
                 isConfig={this.props.isConfig}
                 tutorial={this.props.tutorial}
-                onUpdateScene={this.props.onUpdateScene.bind(this)}/>
+                onUpdateScene={this.props.onUpdateScene.bind(this)}
+                simpleMode={this.props.simpleMode}
+                search={this.props.search}/>
             </CardContent>
           </Card>
         </Grid>

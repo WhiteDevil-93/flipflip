@@ -59,6 +59,7 @@ export default class ImagePlayer extends React.Component {
     historyOffset: 0,
   };
 
+  _downloading = new Set<string>();
   _backForth: NodeJS.Timeout = null;
   _isMounted: boolean;
   _isLooping: boolean;
@@ -334,6 +335,21 @@ export default class ImagePlayer extends React.Component {
     this.advance(true, true);
   }
 
+  downloadFile(url: string, dest: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const file = fs.createWriteStream(dest);
+      request(url)
+        .on('error', (err) => {
+          fs.unlink(dest, () => reject(err));
+        })
+        .pipe(file)
+        .on('finish', () => {
+          file.close();
+          resolve();
+        });
+    });
+  }
+
   startFetchLoops(max: number, loop = 0) {
     if (loop < max) {
       this.runFetchLoop(loop);
@@ -540,12 +556,23 @@ export default class ImagePlayer extends React.Component {
     // Don't bother loading files we've already cached locally
     const fileType = getSourceType(url);
     if (this.props.config.caching.enabled && url.startsWith("http")) {
-      if (fileType != ST.nimja && fileType != ST.hydrus && fileType != ST.piwigo && fileType != ST.video && fileType != ST.local && fileType != ST.playlist) {
+      if (fileType != ST.nimja && fileType != ST.hydrus && fileType != ST.piwigo && fileType != ST.local && fileType != ST.playlist) {
         const sourceCachePath = getCachePath(source, this.props.config);
+        if (!fs.existsSync(sourceCachePath)) {
+          fs.mkdirSync(sourceCachePath, {recursive: true});
+        }
         const filePath = sourceCachePath + getFileName(url);
         const cachedAlready = fs.existsSync(filePath);
         if (cachedAlready) {
           url = filePath;
+        } else if (fileType == ST.video && !this._downloading.has(url)) {
+          this._downloading.add(url);
+          this.downloadFile(url, filePath).then(() => {
+            this._downloading.delete(url);
+          }).catch((e) => {
+            console.error(e);
+            this._downloading.delete(url);
+          });
         }
       }
     }

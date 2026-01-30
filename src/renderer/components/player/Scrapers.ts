@@ -2824,6 +2824,34 @@ async function convertURL(url: string): Promise<Array<string>> {
     pm({warning: "Possible missed file: " + url});
   }
 
+  // If this is a reddit video, try to find the fallback url
+  let redditVideoMatch = url.match("^https?://v\.redd\.it/(\\w*)$");
+  if (redditVideoMatch != null) {
+    try {
+      let json: any = await wretch(url + ".json").get().json();
+      let fallback = json[0].data.children[0].data.secure_media?.reddit_video?.fallback_url;
+      if (fallback) {
+        return [fallback];
+      }
+    } catch (e) {
+      console.error("Failed to get reddit video", e);
+    }
+  }
+
+  // If this is a twitter video, try to scrape via vxtwitter
+  if (url.includes("twitter.com") || url.includes("x.com")) {
+    try {
+      let vxUrl = url.replace("twitter.com", "vxtwitter.com").replace("x.com", "vxtwitter.com");
+      let html = await wretch(vxUrl).get().text();
+      let videoMatch = html.match(/<meta property="og:video" content="([^"]*)"/);
+      if (videoMatch && videoMatch[1]) {
+        return [videoMatch[1]];
+      }
+    } catch (e) {
+      console.error("Failed to get twitter video", e);
+    }
+  }
+
   return [url];
 }
 
