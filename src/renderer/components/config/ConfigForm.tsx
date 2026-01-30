@@ -213,7 +213,7 @@ class ConfigForm extends React.Component {
     openTab: 2,
     errorSnackOpen: false,
     errorSnack: null as string,
-    simpleMode: true,
+    simpleMode: false,
     search: "",
   };
 
