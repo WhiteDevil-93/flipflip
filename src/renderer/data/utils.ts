@@ -300,7 +300,7 @@ export function extractMusicMetadata(audio: Audio, metadata: any, cachePath: str
 }
 
 export function openExternal(url: string) {
-  if (/^https?:\/\//.test(url)) {
+  if (/^https?:\/\//.test(url) || /^file:\/\//.test(url) || (process.platform === "win32" && /^[a-zA-Z]:\\/.test(url)) || (process.platform !== "win32" && /^\//.test(url))) {
     remote.shell.openExternal(url);
   } else {
     console.warn("Blocked potentially unsafe openExternal call: " + url);

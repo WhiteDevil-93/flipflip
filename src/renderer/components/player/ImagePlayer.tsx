@@ -561,7 +561,8 @@ export default class ImagePlayer extends React.Component {
         if (!fs.existsSync(sourceCachePath)) {
           fs.mkdirSync(sourceCachePath, {recursive: true});
         }
-        const filePath = sourceCachePath + getFileName(url);
+        const filename = getFileName(url).replace(/^.*[\\\/]/, ''); // Sanitize filename
+        const filePath = sourceCachePath + filename;
         const cachedAlready = fs.existsSync(filePath);
         if (cachedAlready) {
           url = filePath;
