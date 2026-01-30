@@ -2841,7 +2841,7 @@ async function convertURL(url: string): Promise<Array<string>> {
   // If this is a twitter video, try to scrape via vxtwitter
   if (url.includes("twitter.com") || url.includes("x.com")) {
     try {
-      let vxUrl = url.replace("twitter.com", "vxtwitter.com").replace("x.com", "vxtwitter.com");
+      let vxUrl = url.replace(/twitter\.com|x\.com/, "vxtwitter.com");
       let html = await wretch(vxUrl).get().text();
       let videoMatch = html.match(/<meta property="og:video" content="([^"]*)"/);
       if (videoMatch && videoMatch[1]) {
