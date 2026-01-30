@@ -3,6 +3,12 @@ import { initializeIpcEvents, releaseIpcEvents } from './IPCEvents';
 import { createMainMenu, createMenuTemplate } from './MainMenu';
 import {createNewWindow, startScene} from "./WindowManager";
 
+// Command-line switches must be appended before the 'ready' event
+app.commandLine.appendSwitch('js-flags', '--expose_gc');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -15,12 +21,6 @@ app.on('ready', () => {
       }
     })
   });
-
-  // Enable garbage collection
-  app.commandLine.appendSwitch('js-flags', '--expose_gc');
-  app.commandLine.appendSwitch('ignore-gpu-blocklist');
-  app.commandLine.appendSwitch('enable-gpu-rasterization');
-  app.commandLine.appendSwitch('enable-zero-copy');
 
   createNewWindow();
   createMainMenu(Menu, createMenuTemplate(app));
@@ -38,5 +38,3 @@ app.on('window-all-closed', () => {
   releaseIpcEvents();
   app.quit();
 });
-
-app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required')
