@@ -213,8 +213,8 @@ export default class ImagePlayer extends React.Component {
     for (let timeout of this._imgLoadTimeouts) {
       clearTimeout(timeout);
     }
-    this._downloadQueue = null;
-    this._activeDownloads = null;
+    this._downloadQueue = [];
+    this._activeDownloads = 0;
     this._backForth = null;
     this._timeout = null;
     this._waitTimeouts = null;
@@ -358,28 +358,46 @@ export default class ImagePlayer extends React.Component {
   }
 
   processDownloadQueue() {
+    // Don't process queue if component is unmounted
+    if (!this._isMounted) {
+      return;
+    }
+    
     // Process items from the queue if we have capacity
     while (this._activeDownloads < this._maxConcurrentDownloads && this._downloadQueue.length > 0) {
-      const item = this._downloadQueue.shift();
-      if (item && !this._downloading.has(item.url)) {
-        this._downloading.add(item.url);
-        this._activeDownloads++;
-        
-        this.downloadFile(item.url, item.filePath)
-          .then(() => {
-            this._downloading.delete(item.url);
-            this._activeDownloads--;
-            // Process next item in queue
-            this.processDownloadQueue();
-          })
-          .catch((e) => {
-            console.error(e);
-            this._downloading.delete(item.url);
-            this._activeDownloads--;
-            // Process next item in queue even on error
-            this.processDownloadQueue();
-          });
+      // Peek at the first item to check if it's already downloading
+      const item = this._downloadQueue[0];
+      if (!item || this._downloading.has(item.url)) {
+        // Remove and skip this item
+        this._downloadQueue.shift();
+        continue;
       }
+      
+      // Now we can safely remove and process the item
+      this._downloadQueue.shift();
+      this._downloading.add(item.url);
+      this._activeDownloads++;
+      
+      this.downloadFile(item.url, item.filePath)
+        .then(() => {
+          if (!this._isMounted) return;
+          this._downloading.delete(item.url);
+          this._activeDownloads--;
+          // Process next item in queue
+          this.processDownloadQueue();
+        })
+        .catch((e) => {
+          console.error(e);
+          if (!this._isMounted) return;
+          // Clean up partially downloaded file
+          if (fs.existsSync(item.filePath)) {
+            fs.unlinkSync(item.filePath);
+          }
+          this._downloading.delete(item.url);
+          this._activeDownloads--;
+          // Process next item in queue even on error
+          this.processDownloadQueue();
+        });
     }
   }
 
