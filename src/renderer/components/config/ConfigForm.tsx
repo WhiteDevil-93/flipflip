@@ -16,14 +16,17 @@ import {
   DialogTitle,
   Divider,
   Drawer,
+  FormControlLabel,
   IconButton,
   ListItem,
   ListItemIcon,
   ListItemText,
   Slide,
   Snackbar,
+  Switch,
   Tab,
   Tabs,
+  TextField,
   Theme,
   Toolbar,
   Tooltip,
@@ -210,6 +213,8 @@ class ConfigForm extends React.Component {
     openTab: 2,
     errorSnackOpen: false,
     errorSnack: null as string,
+    simpleMode: false,
+    search: "",
   };
 
   render() {
@@ -238,6 +243,24 @@ class ConfigForm extends React.Component {
               Settings
             </Typography>
             <div className={classes.fill}/>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={this.state.simpleMode}
+                  onChange={(e) => this.setState({simpleMode: e.target.checked})}
+                  color="secondary"
+                />
+              }
+              label="Simple Mode"
+            />
+            <TextField
+              variant="standard"
+              placeholder="Search..."
+              value={this.state.search}
+              onChange={(e) => this.setState({search: e.target.value})}
+              style={{marginRight: 20}}
+            />
 
             <Tooltip disableInteractive title="Confirm Settings">
               <IconButton
@@ -364,7 +387,9 @@ class ConfigForm extends React.Component {
                       allSceneGrids={this.props.sceneGrids}
                       scene={this.state.config.defaultScene}
                       isConfig
-                      onUpdateScene={this.onUpdateDefaultScene.bind(this)} />
+                      onUpdateScene={this.onUpdateDefaultScene.bind(this)}
+                      simpleMode={this.state.simpleMode}
+                      search={this.state.search} />
                   </Box>
                 </div>
               </Typography>
@@ -378,7 +403,9 @@ class ConfigForm extends React.Component {
                     <SceneEffects
                       easingControls={this.state.config.displaySettings.easingControls}
                       scene={this.state.config.defaultScene}
-                      onUpdateScene={this.onUpdateDefaultScene.bind(this)} />
+                      onUpdateScene={this.onUpdateDefaultScene.bind(this)}
+                      simpleMode={this.state.simpleMode}
+                      search={this.state.search} />
                   </Box>
                 </div>
               </Typography>
@@ -406,7 +433,9 @@ class ConfigForm extends React.Component {
                       onUpdateConfig={this.onUpdateConfig.bind(this)}
                       onUpdateGeneralSettings={this.onUpdateGeneralSettings.bind(this)}
                       onUpdateDisplaySettings={this.onUpdateDisplaySettings.bind(this)}
-                      onUpdateRemoteSettings={this.onUpdateRemoteSettings.bind(this)} />
+                      onUpdateRemoteSettings={this.onUpdateRemoteSettings.bind(this)}
+                      simpleMode={this.state.simpleMode}
+                      search={this.state.search} />
                   </Box>
                 </div>
               </Typography>

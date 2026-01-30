@@ -74,9 +74,15 @@ class ImageVideoCard extends React.Component {
     sidebar: boolean,
     tutorial: string,
     isConfig: boolean,
+    simpleMode?: boolean,
+    search?: string,
     onUpdateScene(scene: Scene | SceneSettings, fn: (scene: Scene | SceneSettings) => void): void,
     isPlayer?: boolean,
   };
+
+  shouldShow(text: string) {
+    return !this.props.search || text.toLowerCase().includes(this.props.search.toLowerCase());
+  }
 
   render() {
     const classes = this.props.classes;
@@ -93,9 +99,9 @@ class ImageVideoCard extends React.Component {
     const disableWeightOptions = !this.props.isConfig && (this.props.scene.sources.length == 0 || (this.props.scene.sources.length == 1 && !this.props.scene.sources[0].dirOfSources));
     return (
       <Grid container alignItems="center">
-        {!this.props.isPlayer && (
+        {!this.props.isPlayer && (this.shouldShow("Image Filter") || this.shouldShow("GIF Options") || this.shouldShow("Image Orientation")) && (
           <Grid container spacing={2} alignItems="center" className={clsx(classes.gutterBottom, this.props.tutorial == SDT.imageOptions && classes.highlight)}>
-            {(this.props.scene.generatorWeights != null || this.props.isConfig) && (
+            {(this.props.scene.generatorWeights != null || this.props.isConfig) && this.shouldShow("Re-Generate") && (
               <Grid item xs={12}>
                 <FormControlLabel
                   control={
@@ -217,6 +223,7 @@ class ImageVideoCard extends React.Component {
             </Grid>
           </Grid>
         )}
+        {(this.shouldShow("Video Options") || this.shouldShow("Video Speed")) && (
         <Grid container spacing={2} alignItems="center" className={clsx(this.props.tutorial == SDT.videoOptions && classes.highlight)}>
           <Grid item xs={12} sm={this.props.sidebar ? 12 : 6} className={clsx((this.props.scene.imageTypeFilter == IF.stills || this.props.scene.imageTypeFilter == IF.images) && classes.noPadding)}>
             <Collapse in={this.props.scene.imageTypeFilter != IF.stills && this.props.scene.imageTypeFilter != IF.images}>
@@ -353,6 +360,8 @@ class ImageVideoCard extends React.Component {
               </Grid>
             </Collapse>
           </Grid>
+          {!this.props.simpleMode && (
+          <React.Fragment>
           <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} className={clsx((this.props.scene.imageTypeFilter == IF.stills || this.props.scene.imageTypeFilter == IF.images) && classes.noPadding)}>
             <Collapse in={this.props.scene.imageTypeFilter != IF.stills && this.props.scene.imageTypeFilter != IF.images}>
               <FormControlLabel
@@ -375,6 +384,8 @@ class ImageVideoCard extends React.Component {
                 label="Start at Random Time"/>
             </Collapse>
           </Grid>
+          </React.Fragment>
+          )}
           <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} md={this.props.sidebar ? 12 : 6} lg={this.props.sidebar ? 12 : 4} className={clsx((this.props.scene.imageTypeFilter == IF.stills || this.props.scene.imageTypeFilter == IF.images) && classes.noPadding)}>
             <Collapse in={this.props.scene.imageTypeFilter != IF.stills && this.props.scene.imageTypeFilter != IF.images}>
               <FormControlLabel
@@ -390,6 +401,7 @@ class ImageVideoCard extends React.Component {
           </Grid>
           <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} md={this.props.sidebar ? 12 : 6} lg={this.props.sidebar ? 12 : 4} className={classes.noPadding}>
           </Grid>
+          {!this.props.simpleMode && (
           <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} className={clsx((this.props.scene.imageTypeFilter == IF.stills || this.props.scene.imageTypeFilter == IF.images) && classes.noPadding)}>
             <Collapse in={this.props.scene.imageTypeFilter != IF.stills && this.props.scene.imageTypeFilter != IF.images}>
               <FormControlLabel
@@ -401,6 +413,7 @@ class ImageVideoCard extends React.Component {
                 label="Use Clips"/>
             </Collapse>
           </Grid>
+          )}
           <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} className={clsx((this.props.scene.imageTypeFilter == IF.stills || this.props.scene.imageTypeFilter == IF.images || this.props.scene.playVideoClips) && classes.noPadding)}>
             <Collapse in={this.props.scene.imageTypeFilter != IF.stills && this.props.scene.imageTypeFilter != IF.images && !this.props.scene.playVideoClips}>
               <TextField
@@ -457,13 +470,14 @@ class ImageVideoCard extends React.Component {
             </Collapse>
           </Grid>
         </Grid>
+        )}
         <Grid container spacing={2} alignItems="center" className={classes.gutterBottom}>
           <Grid item xs={12}>
             <Divider />
           </Grid>
         </Grid>
         <Grid container spacing={2} alignItems="center">
-          {!this.props.isPlayer && (
+          {!this.props.isPlayer && this.shouldShow("Weighting") && (
             <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} className={clsx(this.props.tutorial == SDT.weighting && classes.highlight)}>
               <FormControl variant="standard" component="fieldset">
                 <FormLabel component="legend">Weighting</FormLabel>
@@ -482,6 +496,7 @@ class ImageVideoCard extends React.Component {
               </FormControl>
             </Grid>
           )}
+          {this.shouldShow("Source Ordering") && (
           <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} className={clsx(this.props.tutorial == SDT.sordering && classes.highlight)}>
             <FormControl variant="standard" component="fieldset">
               <FormLabel component="legend">Source Ordering</FormLabel>
@@ -508,6 +523,8 @@ class ImageVideoCard extends React.Component {
                 label="Avoid Repeats"/>
             </Collapse>
           </Grid>
+          )}
+          {this.shouldShow("Image Ordering") && (
           <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} className={clsx(this.props.tutorial == SDT.ordering && classes.highlight)}>
             <FormControl variant="standard" component="fieldset">
               <FormLabel component="legend">Image Ordering</FormLabel>
@@ -529,6 +546,7 @@ class ImageVideoCard extends React.Component {
                 label="Avoid Repeats"/>
             </Collapse>
           </Grid>
+          )}
         </Grid>
       </Grid>
     );

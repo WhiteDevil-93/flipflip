@@ -116,6 +116,8 @@ class SceneOptionCard extends React.Component {
     scene: Scene | SceneSettings,
     sidebar: boolean,
     tutorial: string,
+    simpleMode?: boolean,
+    search?: string,
     onUpdateScene(scene: Scene | SceneSettings, fn: (scene: Scene | SceneSettings) => void): void,
     isTagging?: boolean,
     onGenerate?(scene: Scene | SceneGrid, children?: boolean): void,
@@ -126,6 +128,10 @@ class SceneOptionCard extends React.Component {
   }
 
   readonly sinInputRef: React.RefObject<HTMLInputElement> = React.createRef();
+
+  shouldShow(text: string) {
+    return !this.props.search || text.toLowerCase().includes(this.props.search.toLowerCase());
+  }
 
   render() {
     const classes = this.props.classes;
@@ -147,6 +153,7 @@ class SceneOptionCard extends React.Component {
     const hasBPM = !!playlists && playlists.length && playlists[0].audios.length && playlists[0].audios[0].bpm;
     return (
       <Grid container spacing={2} alignItems="center">
+        {this.shouldShow("Timing") && (
         <Grid item xs={12} className={clsx(this.props.tutorial == SDT.timing && classes.highlight)}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} sm={this.props.sidebar ? 12 : 4} style={{paddingTop: 10}}>
@@ -156,7 +163,7 @@ class SceneOptionCard extends React.Component {
                   variant="standard"
                   value={this.props.scene.timingFunction}
                   onChange={this.onInput.bind(this, 'timingFunction')}>
-                  {[TF.constant, TF.random, TF.sin, TF.bpm].map((tf) => {
+                  {[TF.constant, TF.random, TF.sin, TF.bpm].filter((tf) => !this.props.simpleMode || (tf != TF.sin && tf != TF.bpm)).map((tf) => {
                     if (tf == TF.bpm) {
                       return <MenuItem key={tf} value={tf}>
                         {en.get(tf)} {!hasBPM && <Tooltip disableInteractive title={"Missing audio with BPM"}><ErrorOutlineIcon color={'error'} className={classes.noBPM}/></Tooltip>}
@@ -274,9 +281,12 @@ class SceneOptionCard extends React.Component {
             </Grid>
           </Collapse>
         </Grid>
+        )}
         <Grid item xs={12}>
           <Divider/>
         </Grid>
+        {this.shouldShow("Back/Forth") && !this.props.simpleMode && (
+        <React.Fragment>
         <Grid item xs={12} className={clsx(this.props.tutorial == SDT.backForth && classes.highlight)}>
           <Grid container alignItems="center">
             <Grid item xs={12}>
@@ -418,9 +428,53 @@ class SceneOptionCard extends React.Component {
             </Grid>
           </Collapse>
         </Grid>
+        <Grid item xs={12} className={clsx(!(this.props.scene.backForth && (this.props.scene.backForthTF == TF.random || this.props.scene.backForthTF == TF.sin)) && classes.noPadding)}>
+          <Collapse in={this.props.scene.backForth && (this.props.scene.backForthTF == TF.random || this.props.scene.backForthTF == TF.sin)}
+                    className={classes.fullWidth}>
+            <Grid container alignItems="center">
+              <Grid item xs={12} sm={this.props.sidebar ? 12 : 6}>
+                <TextField
+                  variant="outlined"
+                  label="Between"
+                  margin="dense"
+                  value={backForthMin}
+                  onChange={this.onIntInput.bind(this, 'backForthMin')}
+                  onBlur={this.blurIntKey.bind(this, 'backForthMin')}
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">ms</InputAdornment>,
+                  }}
+                  inputProps={{
+                    step: 100,
+                    min: 0,
+                    type: 'number',
+                  }}/>
+              </Grid>
+              <Grid item xs={12} sm={this.props.sidebar ? 12 : 6}>
+                <TextField
+                  variant="outlined"
+                  label="and"
+                  margin="dense"
+                  value={backForthMax}
+                  onChange={this.onIntInput.bind(this, 'backForthMax')}
+                  onBlur={this.blurIntKey.bind(this, 'backForthMax')}
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">ms</InputAdornment>,
+                  }}
+                  inputProps={{
+                    step: 100,
+                    min: 0,
+                    type: 'number',
+                  }}/>
+              </Grid>
+            </Grid>
+          </Collapse>
+        </Grid>
         <Grid item xs={12}>
           <Divider/>
         </Grid>
+        </React.Fragment>
+        )}
+        {(this.shouldShow("Image Sizing") || this.shouldShow("Background")) && (
         <Grid item xs={12} className={clsx(this.props.tutorial == SDT.imageSizing && classes.highlight)}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={this.props.sidebar ? 8 : 12} sm={this.props.sidebar ? 8 : 6}>
@@ -481,7 +535,8 @@ class SceneOptionCard extends React.Component {
             </Grid>
           </Grid>
         </Grid>
-        {!this.props.isTagging && (
+        )}
+        {!this.props.isTagging && (this.shouldShow("Next Scene") || this.shouldShow("Play After")) && (
           <React.Fragment>
             <Grid item xs={12}>
               <Divider/>
@@ -603,6 +658,8 @@ class SceneOptionCard extends React.Component {
             </Grid>
           </React.Fragment>
         )}
+        {!this.props.simpleMode && (this.shouldShow("Overlays")) && (
+        <React.Fragment>
         <Grid item xs={12}>
           <Divider/>
         </Grid>
@@ -684,6 +741,8 @@ class SceneOptionCard extends React.Component {
               </React.Fragment>
             );
           }
+        )}
+        </React.Fragment>
         )}
       </Grid>
     );
