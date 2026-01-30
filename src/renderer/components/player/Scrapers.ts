@@ -2844,9 +2844,12 @@ async function convertURL(url: string): Promise<Array<string>> {
     try {
       let vxUrl = url.replace(/twitter\.com|x\.com/, "vxtwitter.com");
       let html = await wretch(vxUrl).get().text();
-      let videoMatch = html.match(/<meta property="og:video" content="([^"]*)"/);
-      if (videoMatch && videoMatch[1]) {
-        return [videoMatch[1]];
+      const window = domino.createWindow(html);
+      const document = window.document;
+      const metaTag = document.querySelector('meta[property="og:video"]');
+      const videoUrl = metaTag ? metaTag.getAttribute("content") : null;
+      if (videoUrl) {
+        return [videoUrl];
       }
     } catch (e) {
       console.error("Failed to get twitter video", e);
