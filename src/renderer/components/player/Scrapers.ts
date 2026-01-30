@@ -2825,10 +2825,11 @@ async function convertURL(url: string): Promise<Array<string>> {
   }
 
   // If this is a reddit video, try to find the fallback url
-  let redditVideoMatch = url.match("^https?://v\.redd\.it/(\\w*)$");
+  let redditVideoMatch = url.match(/^https?:\/\/v\.redd\.it\/([\w-]+)/);
   if (redditVideoMatch != null) {
     try {
-      let json: any = await wretch(url + ".json").get().json();
+      const redditApiUrl = "https://www.reddit.com/video/" + redditVideoMatch[1] + ".json";
+      let json: any = await wretch(redditApiUrl).get().json();
       let fallback = json[0].data.children[0].data.secure_media?.reddit_video?.fallback_url;
       if (fallback) {
         return [fallback];
