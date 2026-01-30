@@ -1,7 +1,6 @@
 import IncomingMessage = Electron.IncomingMessage;
-import {webFrame} from "electron";
+import {net, webFrame} from "electron";
 import * as React from 'react';
-import request from 'request';
 import fs from "fs";
 import gifInfo from 'gif-info';
 
@@ -338,15 +337,26 @@ export default class ImagePlayer extends React.Component {
   downloadFile(url: string, dest: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const file = fs.createWriteStream(dest);
-      request(url)
-        .on('error', (err) => {
-          fs.unlink(dest, () => reject(err));
-        })
-        .pipe(file)
-        .on('finish', () => {
+      const request = net.request(url);
+      
+      request.on('response', (response) => {
+        response.pipe(file);
+        
+        response.on('end', () => {
           file.close();
           resolve();
         });
+        
+        response.on('error', (err) => {
+          fs.unlink(dest, () => reject(err));
+        });
+      });
+      
+      request.on('error', (err) => {
+        fs.unlink(dest, () => reject(err));
+      });
+      
+      request.end();
     });
   }
 
@@ -976,14 +986,31 @@ export default class ImagePlayer extends React.Component {
           if (url.includes("file://")) {
             processInfo(gifInfo(toArrayBuffer(fs.readFileSync(urlToPath(url)))));
           } else {
-            request.get({url, encoding: null}, function (err: Error, res: IncomingMessage, body: Buffer) {
-              if (err) {
+            const request = net.request(url);
+            const chunks: Buffer[] = [];
+            
+            request.on('response', (response) => {
+              response.on('data', (chunk) => {
+                chunks.push(chunk);
+              });
+              
+              response.on('end', () => {
+                const body = Buffer.concat(chunks);
+                processInfo(gifInfo(toArrayBuffer(body)));
+              });
+              
+              response.on('error', (err) => {
                 console.error(err);
                 processInfo(null);
-                return;
-              }
-              processInfo(gifInfo(toArrayBuffer(body)));
+              });
             });
+            
+            request.on('error', (err) => {
+              console.error(err);
+              processInfo(null);
+            });
+            
+            request.end();
           }
         } catch (e) {
           console.error(e);
