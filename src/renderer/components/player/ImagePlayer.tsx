@@ -339,21 +339,46 @@ export default class ImagePlayer extends React.Component {
       const file = fs.createWriteStream(dest);
       const request = net.request(url);
       
+      const cleanup = (callback: () => void) => {
+        try {
+          fs.unlink(dest, () => callback());
+        } catch (e) {
+          callback();
+        }
+      };
+      
+      file.on('error', (err) => {
+        request.abort();
+        cleanup(() => reject(err));
+      });
+      
       request.on('response', (response) => {
+        // Check for successful HTTP status code
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          request.abort();
+          cleanup(() => reject(new Error(`HTTP ${response.statusCode}: Failed to download file`)));
+          return;
+        }
+        
         response.pipe(file);
         
         response.on('end', () => {
-          file.close();
-          resolve();
+          file.close((err) => {
+            if (err) {
+              cleanup(() => reject(err));
+            } else {
+              resolve();
+            }
+          });
         });
         
         response.on('error', (err) => {
-          fs.unlink(dest, () => reject(err));
+          cleanup(() => reject(err));
         });
       });
       
       request.on('error', (err) => {
-        fs.unlink(dest, () => reject(err));
+        cleanup(() => reject(err));
       });
       
       request.end();
@@ -990,13 +1015,26 @@ export default class ImagePlayer extends React.Component {
             const chunks: Buffer[] = [];
             
             request.on('response', (response) => {
+              // Check for successful HTTP status code
+              if (response.statusCode < 200 || response.statusCode >= 300) {
+                console.error(`HTTP ${response.statusCode}: Failed to fetch GIF info`);
+                processInfo(null);
+                request.abort();
+                return;
+              }
+              
               response.on('data', (chunk) => {
                 chunks.push(chunk);
               });
               
               response.on('end', () => {
-                const body = Buffer.concat(chunks);
-                processInfo(gifInfo(toArrayBuffer(body)));
+                try {
+                  const body = Buffer.concat(chunks);
+                  processInfo(gifInfo(toArrayBuffer(body)));
+                } catch (e) {
+                  console.error(e);
+                  processInfo(null);
+                }
               });
               
               response.on('error', (err) => {
