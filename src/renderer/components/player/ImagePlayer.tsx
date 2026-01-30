@@ -571,7 +571,15 @@ export default class ImagePlayer extends React.Component {
             this._downloading.delete(url);
           }).catch((e) => {
             console.error(e);
-            this._downloading.delete(url);
+            try {
+              if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+              }
+            } catch (cleanupError) {
+              console.error('Failed to clean up incomplete cached file:', cleanupError);
+            } finally {
+              this._downloading.delete(url);
+            }
           });
         }
       }
