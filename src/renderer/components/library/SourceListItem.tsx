@@ -28,7 +28,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import DeleteIcon from '@mui/icons-material/Delete';
 import OfflineBoltIcon from '@mui/icons-material/OfflineBolt';
 
-import {getCachePath, getTimestamp, urlToPath} from "../../data/utils";
+import {getCachePath, getTimestamp, openExternal, urlToPath} from "../../data/utils";
 import {getFileName, getSourceType} from "../player/Scrapers";
 import {SDT, ST} from "../../data/const";
 import Tag from "../../data/Tag";
@@ -451,7 +451,7 @@ class SourceListItem extends React.Component {
   }
 
   openExternalURL(url: string) {
-    remote.shell.openExternal(url);
+    openExternal(url);
   }
 }
 

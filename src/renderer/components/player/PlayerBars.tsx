@@ -45,7 +45,7 @@ import SystemUpdateAltIcon from "@mui/icons-material/SystemUpdateAlt";
 
 import {createMainMenu, createMenuTemplate} from "../../../main/MainMenu";
 import {PT, ST} from "../../data/const";
-import {getCachePath, urlToPath} from "../../data/utils";
+import {getCachePath, openExternal, urlToPath} from "../../data/utils";
 import {getSourceType} from "./Scrapers";
 import Config from "../../data/Config";
 import LibrarySource from "../../data/LibrarySource";
@@ -807,7 +807,7 @@ class PlayerBars extends React.Component {
   }
 
   openLink(url: string) {
-    remote.shell.openExternal(url);
+    openExternal(url);
   }
 
   onMouseEnterAppBar() {
@@ -966,11 +966,11 @@ class PlayerBars extends React.Component {
     }
     contextMenu.append(new MenuItem({
       label: 'Open Source',
-      click: () => { remote.shell.openExternal(source); }
+      click: () => { openExternal(source); }
     }));
     contextMenu.append(new MenuItem({
       label: 'Open File',
-      click: () => { remote.shell.openExternal(url); }
+      click: () => { openExternal(url); }
     }));
     if (this.props.config.caching.enabled && type != ST.local) {
       contextMenu.append(new MenuItem({

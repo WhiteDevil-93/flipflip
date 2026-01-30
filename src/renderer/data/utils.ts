@@ -299,6 +299,14 @@ export function extractMusicMetadata(audio: Audio, metadata: any, cachePath: str
   }
 }
 
+export function openExternal(url: string) {
+  if (/^https?:\/\//.test(url)) {
+    remote.shell.openExternal(url);
+  } else {
+    console.warn("Blocked potentially unsafe openExternal call: " + url);
+  }
+}
+
 export function getLocalPath(source: string, config: Config) {
   return cachePath(source, "local", config);
 }

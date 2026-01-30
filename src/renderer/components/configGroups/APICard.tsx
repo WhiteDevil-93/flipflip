@@ -41,6 +41,7 @@ import withStyles from '@mui/styles/withStyles';
 
 import Config, {RemoteSettings} from "../../data/Config";
 import {IG, MO, SS, ST} from "../../data/const";
+import {openExternal} from "../../data/utils";
 import en from "../../data/en";
 import SourceIcon from "../library/SourceIcon";
 
@@ -788,7 +789,7 @@ class APICard extends React.Component {
   }
 
   openLink(url: string) {
-    remote.shell.openExternal(url);
+    openExternal(url);
   }
 
   closeServer() {
@@ -871,7 +872,7 @@ class APICard extends React.Component {
       }
 
       sharedSecret = secret;
-      remote.shell.openExternal(authorizeUrl + '?oauth_token=' + token);
+      openExternal(authorizeUrl + '?oauth_token=' + token);
     });
 
     // Start a server to listen for Tumblr OAuth response
@@ -948,7 +949,7 @@ class APICard extends React.Component {
       "&redirect_uri=http://localhost:65010&duration=permanent&scope=read,mysubreddits,history")
       .post()
       .res(res => {
-        remote.shell.openExternal(res.url);
+        openExternal(res.url);
       })
       .catch(e => {
         console.error(e);
@@ -1055,7 +1056,7 @@ class APICard extends React.Component {
       }
 
       sharedSecret = secret;
-      remote.shell.openExternal(authorizeUrl + '?oauth_token=' + token);
+      openExternal(authorizeUrl + '?oauth_token=' + token);
     });
 
     // Start a server to listen for Twitter OAuth response

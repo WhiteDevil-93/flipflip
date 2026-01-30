@@ -509,16 +509,8 @@ export class SceneSettings implements SceneSettingsI {
 export class RemoteSettings implements RemoteSettingsI {
   [key: string]: string | Array<string> | boolean;
 
-  tumblrKeys = ["BaQquvlxQeRhKRyViknF98vseIdcBEyDrzJBpHxvAiMPHCKR2l",
-    "G4iZd6FBiyDxHVUpNqtOTDu4woWzfp8WuH3tTrT3MC16GTmNzq",
-    "y5uUQJYTCp15Nj3P80cLmNFqwSr1mxIhm3C4PCsGAfReydkF9m",
-    "IZiOt6PYazf4g0sYWVfpfebMITRFWmtlKq2UKe6l0RsqKHPgui",
-    "ATtwOUlruyVl8bEiHTnYcRpByEAzov2LtLEWOfDLqhPRZFmT4X"];
-  tumblrSecrets = ["XWVCo7t0GMGkOAd9wsxMMkKPhQbl3RqauGzQtnzAnmHCJ7WdSn",
-    "RmoWUh844NqVdw7btWI6EYldJ91KhwJyfCKPtAIcuVokFtRYgS",
-    "xiEV5sJISJAwegJHTTLWtxnmFUkowxgMk2gOq4mc20VNLM2TpJ",
-    "Iw3yKgjfMvrKPNCcqdUyRuxCkYWYyRlrMdFUojRHVkSSADOKCT",
-    "cMM7xqJV1roUudEdBiZeOqv3n1H0pzNnGY1iAbp3oo3c29MXGq"];
+  tumblrKeys = ["", "", "", "", ""];
+  tumblrSecrets = ["", "", "", "", ""];
 
   tumblrKey = "";
   tumblrSecret = "";
@@ -527,12 +519,12 @@ export class RemoteSettings implements RemoteSettingsI {
   silenceTumblrAlert = false;
 
   redditUserAgent = "desktop:flipflip:v2.0.0 (by /u/ififfy)";
-  redditClientID = "2Iqe-1CsO4VQlA";
+  redditClientID = "";
   redditDeviceID = "";
   redditRefreshToken = "";
 
-  twitterConsumerKey = "qSRfdIWfpkesYDVJHrRh05wji";
-  twitterConsumerSecret = "ad11IC4CLwVzYyGyYwHKVMP9WwAcKxymw4D9162S5Ex75l5eWw";
+  twitterConsumerKey = "";
+  twitterConsumerSecret = "";
   twitterAccessTokenKey = "";
   twitterAccessTokenSecret = "";
 

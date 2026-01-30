@@ -338,51 +338,14 @@ export default class ImagePlayer extends React.Component {
   downloadFile(url: string, dest: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const file = fs.createWriteStream(dest);
-      const req = request(url);
-      let settled = false;
-
-      const cleanupAndReject = (err: Error) => {
-        if (settled) {
-          return;
-        }
-        settled = true;
-
-        try {
-          req.abort();
-        } catch {
-          // ignore abort errors
-        }
-
-        try {
-          file.close();
-        } catch {
-          // ignore close errors
-        }
-
-        try {
-          if (fs.existsSync(dest)) {
-            fs.unlinkSync(dest);
-          }
-        } catch {
-          // ignore unlink errors; preserve original error
-        }
-
-        reject(err);
-      };
-
-      req.on('error', cleanupAndReject);
-      file.on('error', cleanupAndReject);
-
-      req
+      request(url)
+        .on('error', (err) => {
+          fs.unlink(dest, () => reject(err));
+        })
         .pipe(file)
         .on('finish', () => {
-          if (settled) {
-            return;
-          }
-          settled = true;
-          file.close(() => {
-            resolve();
-          });
+          file.close();
+          resolve();
         });
     });
   }
@@ -608,15 +571,7 @@ export default class ImagePlayer extends React.Component {
             this._downloading.delete(url);
           }).catch((e) => {
             console.error(e);
-            try {
-              if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-              }
-            } catch (cleanupError) {
-              console.error('Failed to clean up incomplete cached file:', cleanupError);
-            } finally {
-              this._downloading.delete(url);
-            }
+            this._downloading.delete(url);
           });
         }
       }
