@@ -1,7 +1,6 @@
 import IncomingMessage = Electron.IncomingMessage;
-import {webFrame} from "electron";
+import {net, webFrame} from "electron";
 import * as React from 'react';
-import request from 'request';
 import fs from "fs";
 import gifInfo from 'gif-info';
 
@@ -338,15 +337,51 @@ export default class ImagePlayer extends React.Component {
   downloadFile(url: string, dest: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const file = fs.createWriteStream(dest);
-      request(url)
-        .on('error', (err) => {
-          fs.unlink(dest, () => reject(err));
-        })
-        .pipe(file)
-        .on('finish', () => {
-          file.close();
-          resolve();
+      const request = net.request(url);
+      
+      const cleanup = (callback: () => void) => {
+        try {
+          fs.unlink(dest, () => callback());
+        } catch (e) {
+          callback();
+        }
+      };
+      
+      file.on('error', (err) => {
+        request.abort();
+        cleanup(() => reject(err));
+      });
+      
+      request.on('response', (response) => {
+        // Check for successful HTTP status code
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          request.abort();
+          cleanup(() => reject(new Error(`HTTP ${response.statusCode}: Failed to download file`)));
+          return;
+        }
+        
+        response.pipe(file);
+        
+        response.on('end', () => {
+          file.close((err) => {
+            if (err) {
+              cleanup(() => reject(err));
+            } else {
+              resolve();
+            }
+          });
         });
+        
+        response.on('error', (err) => {
+          cleanup(() => reject(err));
+        });
+      });
+      
+      request.on('error', (err) => {
+        cleanup(() => reject(err));
+      });
+      
+      request.end();
     });
   }
 
@@ -969,14 +1004,44 @@ export default class ImagePlayer extends React.Component {
           if (url.includes("file://")) {
             processInfo(gifInfo(toArrayBuffer(fs.readFileSync(urlToPath(url)))));
           } else {
-            request.get({url, encoding: null}, function (err: Error, res: IncomingMessage, body: Buffer) {
-              if (err) {
-                console.error(err);
+            const request = net.request(url);
+            const chunks: Buffer[] = [];
+            
+            request.on('response', (response) => {
+              // Check for successful HTTP status code
+              if (response.statusCode < 200 || response.statusCode >= 300) {
+                console.error(`HTTP ${response.statusCode}: Failed to fetch GIF info`);
                 processInfo(null);
+                request.abort();
                 return;
               }
-              processInfo(gifInfo(toArrayBuffer(body)));
+              
+              response.on('data', (chunk) => {
+                chunks.push(chunk);
+              });
+              
+              response.on('end', () => {
+                try {
+                  const body = Buffer.concat(chunks);
+                  processInfo(gifInfo(toArrayBuffer(body)));
+                } catch (e) {
+                  console.error(e);
+                  processInfo(null);
+                }
+              });
+              
+              response.on('error', (err) => {
+                console.error(err);
+                processInfo(null);
+              });
             });
+            
+            request.on('error', (err) => {
+              console.error(err);
+              processInfo(null);
+            });
+            
+            request.end();
           }
         } catch (e) {
           console.error(e);
