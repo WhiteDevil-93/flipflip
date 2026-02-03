@@ -5,7 +5,13 @@ import {IPC} from "../renderer/data/const";
 
 // Define functions
 function onRequestCreateNewWindow(ev: IpcMessageEvent) {
-  createNewWindow();
+  // Validate sender URL
+  const senderURL = ev.sender.getURL();
+  if (senderURL.startsWith('file://')) {
+    createNewWindow();
+  } else {
+    console.warn("Blocked unauthorized new window request from: " + senderURL);
+  }
 }
 
 
