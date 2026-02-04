@@ -60,6 +60,9 @@ export default class ImagePlayer extends React.Component {
   };
 
   _downloading = new Set<string>();
+  _downloadQueue: Array<{url: string, filePath: string}> = [];
+  _activeDownloads = 0;
+  _maxConcurrentDownloads = 3;
   _backForth: NodeJS.Timeout = null;
   _isMounted: boolean;
   _isLooping: boolean;
@@ -160,6 +163,8 @@ export default class ImagePlayer extends React.Component {
   _lastAdvance: number = null;
   componentDidMount() {
     this._runFetchLoopCallRequests = [];
+    this._downloadQueue = [];
+    this._activeDownloads = 0;
     this._isMounted = true;
     this._isLooping = false;
     this._loadedSources = new Array<string>();
@@ -208,6 +213,8 @@ export default class ImagePlayer extends React.Component {
     for (let timeout of this._imgLoadTimeouts) {
       clearTimeout(timeout);
     }
+    this._downloadQueue = [];
+    this._activeDownloads = 0;
     this._backForth = null;
     this._timeout = null;
     this._waitTimeouts = null;
@@ -357,6 +364,59 @@ export default class ImagePlayer extends React.Component {
         fs.unlink(dest, () => reject(err));
       });
     });
+  }
+
+  processDownloadQueue() {
+    // Don't process queue if component is unmounted
+    if (!this._isMounted) {
+      return;
+    }
+    
+    // Process items from the queue if we have capacity
+    while (this._activeDownloads < this._maxConcurrentDownloads && this._downloadQueue.length > 0) {
+      // Peek at the first item to check if it's already downloading
+      const item = this._downloadQueue[0];
+      if (!item || this._downloading.has(item.url)) {
+        // Remove and skip this item
+        this._downloadQueue.shift();
+        continue;
+      }
+      
+      // Now we can safely remove and process the item
+      this._downloadQueue.shift();
+      this._downloading.add(item.url);
+      this._activeDownloads++;
+      
+      this.downloadFile(item.url, item.filePath)
+        .then(() => {
+          if (!this._isMounted) return;
+          this._downloading.delete(item.url);
+          this._activeDownloads--;
+          // Process next item in queue
+          this.processDownloadQueue();
+        })
+        .catch((e) => {
+          console.error(e);
+          if (!this._isMounted) return;
+          // Clean up partially downloaded file
+          if (fs.existsSync(item.filePath)) {
+            fs.unlinkSync(item.filePath);
+          }
+          this._downloading.delete(item.url);
+          this._activeDownloads--;
+          // Process next item in queue even on error
+          this.processDownloadQueue();
+        });
+    }
+  }
+
+  queueDownload(url: string, filePath: string) {
+    // Add to queue if not already downloading or queued
+    if (!this._downloading.has(url) && 
+        !this._downloadQueue.some(item => item.url === url)) {
+      this._downloadQueue.push({url, filePath});
+      this.processDownloadQueue();
+    }
   }
 
   startFetchLoops(max: number, loop = 0) {
@@ -576,13 +636,7 @@ export default class ImagePlayer extends React.Component {
         if (cachedAlready) {
           url = filePath;
         } else if (fileType == ST.video && !this._downloading.has(url)) {
-          this._downloading.add(url);
-          this.downloadFile(url, filePath).then(() => {
-            this._downloading.delete(url);
-          }).catch((e) => {
-            console.error(e);
-            this._downloading.delete(url);
-          });
+          this.queueDownload(url, filePath);
         }
       }
     }
