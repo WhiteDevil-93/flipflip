@@ -338,15 +338,24 @@ export default class ImagePlayer extends React.Component {
   downloadFile(url: string, dest: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const file = fs.createWriteStream(dest);
-      request(url)
-        .on('error', (err) => {
-          fs.unlink(dest, () => reject(err));
-        })
-        .pipe(file)
-        .on('finish', () => {
-          file.close();
-          resolve();
-        });
+      const req = request(url);
+      req.on('response', (response) => {
+        if (response.statusCode !== 200) {
+          req.abort();
+          fs.unlink(dest, () => reject(new Error(`Status Code: ${response.statusCode}`)));
+        }
+      });
+      req.on('error', (err) => {
+        fs.unlink(dest, () => reject(err));
+      });
+      req.pipe(file);
+      file.on('finish', () => {
+        file.close();
+        resolve();
+      });
+      file.on('error', (err) => {
+        fs.unlink(dest, () => reject(err));
+      });
     });
   }
 
